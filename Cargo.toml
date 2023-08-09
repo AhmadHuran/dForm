@@ -2,6 +2,8 @@
 name = "dform"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ahmad W. Huran ahmad.houran@gmail.com"]
+description = "Recast GTH/HGH pseudo-potentials into diagonal-projection form"
 
 [dependencies]
 anyhow = "1.0.71"
@@ -10,4 +12,5 @@ ndarray-npy = "0.8.1"
 log = "0.4.19"
 simplelog = "0.12.1"
 special = "0.10.2"
+clap = { version = "4.3.21", features = ["derive"] }
 

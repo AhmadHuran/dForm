@@ -434,8 +434,6 @@ impl PseudoGTH {
         out.slice_mut(s![.., 0]).assign(&r);
         out.slice_mut(s![.., 1]).assign(&r.mapv(|ri| -(self.n_elec as f64) / ri * (self.alpha*ri).error() + self.sr_local(ri)));
         out[[0,1]] = -(self.n_elec as f64) * 2.0 * self.alpha / PI.sqrt() + self.c_i[0];
-       println!("{}", -(self.n_elec as f64) * 2.0 * self.alpha / PI.sqrt()+ self.c_i[0]);
-
         out
 
     }
