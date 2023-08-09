@@ -25,10 +25,10 @@ dform database <path to download>/GTH_POTENTIALS --element=Na --xc=LDA --qion=1 
 ```
 The file `Na_LDA_q1.psp8` is created and the following is printed to the console
 ```
-hh:mm:ss [INFO] [database mode]: Attempt reading potential 'Na-LDA-q1' from file: '<path to download>/GTH_POTENTIALS'
-hh:mm:ss [INFO] [database mode]: Success!
-hh:mm:ss [INFO] [database mode]: Attempt writing potential 'Na-LDA-q1' to file: 'Na_LDA_q1.psp8'
-hh:mm:ss [INFO] [database mode]: Success!
+[INFO] [database mode]: Attempt reading potential 'Na-LDA-q1' from file: '<path to download>/GTH_POTENTIALS'
+[INFO] [database mode]: Success!
+[INFO] [database mode]: Attempt writing potential 'Na-LDA-q1' to file: 'Na_LDA_q1.psp8'
+[INFO] [database mode]: Success!
 ```
 ## Testing
 Single-potential files in both [cp2k](https://www.cp2k.org/) and [abinit](https://www.abinit.org/) formats can be downloaded [here](https://htmlpreview.github.io/?https://github.com/cp2k/cp2k-data/blob/master/potentials/Goedecker/index.html).
