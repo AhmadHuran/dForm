@@ -1,2 +1,2 @@
 # dForm
-Recast GTH/HGH projectors into diagonal form
+Recast GTH/HGH pseudo-potentials into diagonal-projection form
