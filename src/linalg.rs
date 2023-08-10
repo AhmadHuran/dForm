@@ -6,7 +6,6 @@ use ndarray::{Array2, s};
  *
  *              See http://www.sympy.org/ for more information.
  *
- *                      more or less
  */
 fn a_inv_det(
     a11: f64,
