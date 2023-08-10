@@ -37,3 +37,11 @@ Abinit can then be used to contrast calculations using the abinit-formatted pote
 dform single <path to cp2k-formatted potential> --output=some.psp8
 ```
 If necessary the radial grid can be made finer using e.g. `--sep=0.005`. The default separation is 0.01 Bohr.
+
+## References
+#### Transformation
+- [P. E. Blöchl, Generalized separable potentials for electronic-structure calculations, Phys. Rev. B 41(8), 5414 (1990)](https://www.doi.org/10.1103/PhysRevB.41.5414)
+#### GTH/HGH pseudo-potentials
+- [S. Goedecker, M. Teter, and J. Hutter, Separable dual-space Gaussian pseudopotentials, Phys. Rev. B 54, 1703 (1996)](https://www.doi.org/10.1103/PhysRevB.54.1703)
+- [C. Hartwigsen, S. Goedecker, and J. Hutter, Relativistic separable dual-space Gaussian pseudopotentials from H to Rn, Phys. Rev. B 58, 3641 (1998)](https://www.doi.org/10.1103/PhysRevB.58.3641)
+- [M. Krack, Pseudopotentials for H to Kr optimized for gradient-corrected exchange-correlation functionals, Theor. Chem. Acc. 114, 145 (2005)](https://www.doi.org/10.1007/s00214-005-0655-y)
