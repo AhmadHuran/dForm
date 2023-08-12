@@ -1,9 +1,7 @@
 use std::f64::consts::PI;
-use std::io::BufWriter;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::fs::File;
-use std::path::Path;
 use std::str::Lines;
 
 use anyhow::{Result, anyhow};
@@ -13,7 +11,6 @@ use ndarray::Array1;
 use ndarray::Array2;
 use ndarray::Axis;
 use ndarray::s;
-use ndarray_npy::WriteNpyExt;
 use special::Error;
 
 use crate::pspxc;
@@ -40,7 +37,7 @@ pub struct PseudoGTH {
 
 impl PseudoGTH {
     pub fn from_single(filename: &str) -> Result<Self> {
-        let f = match File::open(&filename){
+        let f = match File::open(filename){
             Ok(ok) => ok,
             Err(err) => {
                 let mut message = err.to_string();
@@ -62,7 +59,7 @@ impl PseudoGTH {
         core_charge: usize,
         ) -> Result<Self> {
 
-        let f = match File::open(&filename){
+        let f = match File::open(filename){
             Ok(ok) => ok,
             Err(err) => {
                 let mut message = err.to_string();
@@ -101,7 +98,7 @@ impl PseudoGTH {
                 )
             .map(|v| {
                 let mut v = v.to_owned();
-                v.push_str("\n");
+                v.push('\n');
                 v
             });
 
@@ -134,7 +131,7 @@ impl PseudoGTH {
         let mut lines = lines.filter(
             |x|
             (! x.is_empty()) ||
-            (! x.starts_with("#"))
+            (! x.starts_with('#'))
             );
         let mut header = lines
             .next()
@@ -153,12 +150,11 @@ impl PseudoGTH {
 
         let pspxc = header
             .into_iter()
-            .filter(|v|
+            .find(|v|
                     v.to_owned()
                     .to_lowercase()
                     .starts_with("gth-")
                     )
-            .next()
             .unwrap_or_else(
                 || {
                     warn!("Could not parse xc functional! \
@@ -166,9 +162,8 @@ impl PseudoGTH {
                     "x-pbe".to_owned()
                 }
                 )
-            .split("-")
-            .skip(1)
-            .next()
+            .split('-')
+            .nth(1)
             .unwrap_or_else(
                 || {
                     warn!("Could not parse xc functional! \
@@ -194,7 +189,7 @@ impl PseudoGTH {
             .next()
             .unwrap()
             .split_whitespace()
-            .map(|x| String::from(x))
+            .map(String::from)
             .collect();
         let r_loc: f64 = local.remove(0).parse().unwrap();
         let n_gau: usize = local.remove(0).parse().unwrap();
@@ -231,7 +226,7 @@ impl PseudoGTH {
                 .next()
                 .unwrap()
                 .split_whitespace()
-                .map(|x| String::from(x))
+                .map(String::from)
                 .collect();
             r_l[ll] = at_hand.remove(0).parse::<f64>().unwrap();
             let n_proj_ll = at_hand.remove(0).parse::<usize>().unwrap();
@@ -242,7 +237,8 @@ impl PseudoGTH {
                 let at_hand: Vec<_> = lines
                     .next()
                     .unwrap()
-                    .split_whitespace().map(|x| String::from(x))
+                    .split_whitespace()
+                    .map(String::from)
                     .collect();
 
                 for h1j in at_hand.iter(){
@@ -305,14 +301,12 @@ impl PseudoGTH {
         None
     }
 
-    pub fn dump_projectors(&self, l: usize, r0: f64, r1: f64, nr: usize) -> Array2<f64> {
+    pub fn dump_projectors(&self, l: usize, r0: f64, r1: f64, nr: usize) -> Option<Array2<f64>> {
 
         let r = uniform_grid(r0, r1, nr);
         let nproj = self.n_proj[l];
         if nproj == 0 {
-            let mut dump =  Array2::<f64>::zeros((nr, 2));
-            dump.slice_mut(s![.., 0]).assign(&r);
-            return dump
+            return None
         }
         let rl = self.r_l[l];
         let mut dump = Array2::<f64>::zeros((nr, nproj + 1));
@@ -331,7 +325,7 @@ impl PseudoGTH {
                       );
         }
 
-        dump
+        Some(dump)
     }
 
     pub fn diagonal_form(&self, l: usize) -> Result<(Array2<f64>, Vec<f64>)> {
@@ -397,34 +391,17 @@ impl PseudoGTH {
         Ok((x, overlap))
     }
 
-    pub fn dump_diagonal_form(&self, l: usize, r0: f64, r1:f64, nr: usize) -> Result<Array2<f64>> {
+    pub fn dump_diagonal_form(&self, l: usize, r0: f64, r1:f64, nr: usize) -> Result<Option<Array2<f64>>> {
 
-        let mut dump = self.dump_projectors(l, r0, r1, nr);
+        let Some(mut dump) = self.dump_projectors(l, r0, r1, nr) else {
+            return Ok(None);
+        };
+
         let (coeff, _) = self.diagonal_form(l)?;
         let projectors = dump.slice(s![.., 1..]).to_owned();
         dump.slice_mut(s![.., 1..]).assign(&(projectors.dot(&coeff)));
-        Ok(dump)
+        Ok(Some(dump))
 
-    }
-
-    pub fn write_projectors(&self,
-                            l:usize,
-                            r0: f64,
-                            r1: f64,
-                            nr: usize,
-                            file_path:&str) -> Result<()> {
-        let dump = self.dump_projectors(l, r0, r1, nr);
-        write_array2(file_path, &dump)
-    }
-
-    pub fn write_diagonal_form(&self,
-                            l:usize,
-                            r0: f64,
-                            r1: f64,
-                            nr: usize,
-                            file_path:&str) -> Result<()> {
-        let dump = self.dump_diagonal_form(l, r0, r1, nr)?;
-        write_array2(file_path, &dump)
     }
 
     pub fn dump_local(&self, dr: f64, eps: f64) -> Array2<f64> {
@@ -495,26 +472,26 @@ impl PseudoGTH {
              .create_new(true)
              .open(file_path)?;
 
-        write!(file, "{}\n", title)?;
+        writeln!(file, "{}", title)?;
 
-        write!(
+        writeln!(
             file,
-            "{:.4}\t{:.4}\t000000\t zatom,zion,pspd\n",
+            "{:.4}\t{:.4}\t000000\t zatom,zion,pspd",
             self.atom_nr as f64,
             self.n_elec as f64
             )?;
 
-        write!(
+        writeln!(
             file,
-            "8\t{}\t{}\t6\t{}\t0\tpspcod,pspxc,lmax,lloc,mmax,r2well\n",
+            "8\t{}\t{}\t6\t{}\t0\tpspcod,pspxc,lmax,lloc,mmax,r2well",
             pspxc(self.pspxc.as_str()),
             self.l_max,
             mmax,
             )?;
 
-        write!(
+        writeln!(
             file,
-            "0.0\t0.0\t0.0\trchrg,fchrg,qchrg\n",
+            "0.0\t0.0\t0.0\trchrg,fchrg,qchrg",
             )?;
 
         let mut nproj = vec!["0".to_owned();5];
@@ -523,43 +500,46 @@ impl PseudoGTH {
             .enumerate()
             .for_each(|(ii, n)| {nproj[ii] = n.to_string()});
 
-        write!(
+        writeln!(
             file,
-            "{}\tnproj\n",
+            "{}\tnproj",
             nproj.join("\t"),
             )?;
 
-        write!(
+        writeln!(
             file,
-            "0\t\t\t\textension_switch\n",
+            "0\t\t\t\textension_switch",
             )?;
 
         for l in 0..=self.l_max {
+
+            let Some(dump) = self.dump_diagonal_form(l, 0.0, rmax, mmax)? else {
+                continue
+            };
             let (_, ekbl) = self.diagonal_form(l)?;
 
-            write!(
+            writeln!(
                 file,
-                "{}\t\t{}\n",
+                "{}\t\t{}",
                 l,
                 ekbl.into_iter().map(|v| format!("{:.15e}", v)).collect::<Vec<_>>().join("\t"),
                 )?;
 
-            let dump = self.dump_diagonal_form(l, 0.0, rmax, mmax)?;
             for (ii, row) in dump.rows().into_iter().enumerate() {
-             write!(
+             writeln!(
                 file,
-                "{}\t{}\n",
+                "{}\t{}",
                 ii+1,
                 row.into_iter().map(|v| format!("{:.15e}", v)).collect::<Vec<_>>().join("\t"),
                 )?;
             }
         }
 
-        write!(file, "6\n")?;
+        writeln!(file, "6")?;
             for (ii, row) in local.rows().into_iter().enumerate() {
-             write!(
+             writeln!(
                 file,
-                "{}\t{}\n",
+                "{}\t{}",
                 ii+1,
                 row.into_iter().map(|v| format!("{:.15e}", v)).collect::<Vec<_>>().join("\t"),
                 )?;
@@ -598,13 +578,6 @@ pub fn overlap_mat(l: usize, rl: f64, size: usize) -> Array2<f64> {
 pub fn uniform_grid(start: f64, end:f64, size:usize) -> Array1<f64> {
     let dx = (end-start)/(size as f64 - 1.0);
     Array1::from_iter((0..size).map(|i| start + i as f64 * dx))
-}
-
-pub fn write_array2<P>(file: P, arr:&Array2<f64>) -> Result<()>
-    where P: AsRef<Path> {
-    let writer = BufWriter::new(File::create(file)?);
-    arr.write_npy(writer)?;
-    Ok(())
 }
 
 pub fn bisection<F>(bracket: (f64, f64), function: F, eps: f64) -> f64

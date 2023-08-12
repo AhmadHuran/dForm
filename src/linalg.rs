@@ -42,12 +42,11 @@ fn a_det(
     a23: f64,
     a33: f64,
     ) -> f64 {
-    let out1 = a11 * a22 * a33
+    a11 * a22 * a33
         - a11 * a23.powi(2)
         - a12.powi(2) * a33
         + 2.0 * a12*a13*a23
-        - a13.powi(2) * a22;
-    out1
+        - a13.powi(2) * a22
 }
 
 pub fn inverse_3x3(arr: &Array2<f64>) -> Result<Array2<f64>> {
