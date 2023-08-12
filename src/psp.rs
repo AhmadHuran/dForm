@@ -206,7 +206,7 @@ impl PseudoGTH {
             c_i = Array1::<f64>::zeros(1);
         }
 
-        let l_max = lines
+        let mut l_max = lines
             .next()
             .unwrap()
             .split_whitespace()
@@ -217,15 +217,15 @@ impl PseudoGTH {
                         warn!("Could not parse lmax! \
                               lmax = 0 is assumed.");
                         1
-                    }) - 1_usize
+                    })
                 )
             .next()
             .unwrap();
 
-        let mut h = Vec::<Array2<f64>>::with_capacity(l_max+1);
+        let mut h = Vec::<Array2<f64>>::with_capacity(l_max + 1);
         let mut r_l = Array1::<f64>::zeros(l_max + 1);
         let mut n_proj  = Array1::<usize>::zeros(l_max + 1);
-        for ll in 0..=l_max {
+        for ll in 0..l_max {
             let mut h_ll = Vec::<f64>::new();
             let mut at_hand: Vec<_> = lines
                 .next()
@@ -263,6 +263,13 @@ impl PseudoGTH {
             h.push(mat_h_ll);
         }
         let alpha = 1.0 / (2.0_f64.sqrt() * r_loc);
+
+        if l_max == 0 {
+            h.push(Array2::<f64>::zeros((1, 1)));
+        }
+        else {
+            l_max -= 1;
+        }
 
 
         Ok(
