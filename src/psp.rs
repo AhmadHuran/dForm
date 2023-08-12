@@ -198,10 +198,13 @@ impl PseudoGTH {
             .collect();
         let r_loc: f64 = local.remove(0).parse().unwrap();
         let n_gau: usize = local.remove(0).parse().unwrap();
-        let c_i: Array1<f64> = Array1::from_vec(local
+        let mut c_i: Array1<f64> = Array1::from_vec(local
             .iter()
             .map(|x| x.parse::<f64>().unwrap())
             .collect());
+        if n_gau == 0 {
+            c_i = Array1::<f64>::zeros(1);
+        }
 
         let l_max = lines
             .next()
